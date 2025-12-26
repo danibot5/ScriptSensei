@@ -19,8 +19,47 @@ function addMessage(text, sender) {
         messageDiv.classList.add('bot-message');
     }
 
+    // 1. Слагаме текста на съобщението
     messageDiv.innerText = text;
     chatHistory.appendChild(messageDiv);
+
+    // ============================================================
+    // НОВО: Ако съобщението е от бота и съдържа код...
+    // ============================================================
+    if (sender === 'bot' && text.includes('```')) {
+
+        // Търсим кода между тройните кавички (Regex магия)
+        const codeMatch = text.match(/```(?:javascript|js)?\s*([\s\S]*?)```/i);
+
+        if (codeMatch && codeMatch[1]) {
+            const cleanCode = codeMatch[1].trim(); // Това е чистият код
+
+            // Създаваме бутон "Сложи в редактора"
+            const runCodeBtn = document.createElement('button');
+            runCodeBtn.innerText = "🔽 Сложи кода в редактора";
+            runCodeBtn.style.marginTop = "10px";
+            runCodeBtn.style.padding = "5px 10px";
+            runCodeBtn.style.backgroundColor = "#ffca28"; // Жълт цвят
+            runCodeBtn.style.border = "none";
+            runCodeBtn.style.cursor = "pointer";
+            runCodeBtn.style.borderRadius = "5px";
+            runCodeBtn.style.fontWeight = "bold";
+
+            // Какво става като го натиснеш?
+            runCodeBtn.onclick = function () {
+                const codeEditor = document.getElementById('code-editor');
+                codeEditor.value = cleanCode; // ПРАЩАМЕ ГО ВДЯСНО!
+
+                // Ефект за потвърждение
+                runCodeBtn.innerText = "✅ Готово!";
+                setTimeout(() => runCodeBtn.innerText = "🔽 Сложи пак", 2000);
+            };
+
+            messageDiv.appendChild(runCodeBtn);
+        }
+    }
+    // ============================================================
+
     chatHistory.scrollTop = chatHistory.scrollHeight;
 }
 
