@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="bg">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScriptSensei - Твоят JS Учител</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="container">
+        <section class="chat-section">
+            <header>
+                <h1>ScriptSensei 🤖</h1>
+                <p>Попитай ме нещо за JavaScript!</p>
+            </header>
+
+            <div id="chat-history" class="chat-history">
+                <div class="message bot-message">
+                    Здравей! Аз съм твоят ментор. Какво искаш да научим днес?
+                </div>
+            </div>
+
+            <div class="input-area">
+                <input type="text" id="user-input" placeholder="Напиши въпрос или код тук..." autocomplete="off">
+                <button id="send-btn">Изпрати</button>
+            </div>
+        </section>
+
+        <section class="editor-section">
+            <h2>Твоят код</h2>
+            <textarea id="code-editor" placeholder="// Пиши JS код тук..."></textarea>
+            <button id="run-code-btn">Изпълни кода (Тест)</button>
+            <div id="console-output">Резултатът ще се покаже тук...</div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
