@@ -1,3 +1,7 @@
+// ==========================================
+// AI ЧАТ БОТ
+// ==========================================
+
 const sendBtn = document.getElementById('send-btn');
 const userInput = document.getElementById('user-input');
 const chatHistory = document.getElementById('chat-history');
@@ -49,5 +53,47 @@ sendBtn.addEventListener('click', async function () {
 
     } catch (error) {
         addMessage("Грешка: Сървърът не отговаря.", 'bot');
+    }
+});
+
+
+// ==========================================
+// КОД ЕДИТОР И КОНЗОЛА
+// ==========================================
+
+const codeEditor = document.getElementById('code-editor');
+const runBtn = document.getElementById('run-btn');
+const outputBox = document.getElementById('console-output');
+
+runBtn.addEventListener('click', function () {
+    // 1. Взимаме кода, който си написал
+    const userCode = codeEditor.value;
+
+    // 2. Изчистваме старото съдържание на конзолата
+    outputBox.innerHTML = '';
+
+    try {
+        // --- МАГИЯ: Пренасочване на console.log ---
+        // Запазваме оригиналната конзола (за да не счупим браузъра)
+        const originalConsoleLog = console.log;
+
+        // Казваме на JS: "Когато някой напише console.log, не го печатай в скритата конзола, а го покажи в нашата кутия!"
+        console.log = function (message) {
+            // Добавяме съобщението в сивата кутия
+            outputBox.innerHTML += `<div>> ${message}</div>`;
+            // И все пак го пускаме и в скритата конзола (за всеки случай)
+            originalConsoleLog(message);
+        };
+
+        // 3. Изпълняваме кода на потребителя!
+        // "new Function" създава истинска функция от текст и я пуска
+        new Function(userCode)();
+
+        // Връщаме нормалната конзола, след като приключим
+        console.log = originalConsoleLog;
+
+    } catch (error) {
+        // Ако има грешка в кода, я показваме в червено
+        outputBox.innerHTML = `<div style="color: #ff4444;">🚨 Грешка: ${error.message}</div>`;
     }
 });
