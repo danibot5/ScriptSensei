@@ -384,6 +384,7 @@ body {
 
 .chat-item.active {
     background-color: #343541;
+    border-left: 3px solid #1a73e8;
 }
 
 /* Бутон за нов чат */

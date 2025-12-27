@@ -1,51 +1,116 @@
-// ==============================
-// СТРАНИЧНО МЕНЮ
-// ==============================
-
-document.addEventListener('DOMContentLoaded', function () {
-    const sidebar = document.getElementById('sidebar');
-    const menuBtn = document.getElementById('menu-btn'); // Трябва да съвпада с HTML id="menu-btn"
-    const closeSidebarBtn = document.getElementById('close-sidebar');
-
-    if (menuBtn) {
-        menuBtn.addEventListener('click', function () {
-            console.log("Бутонът е натиснат!"); // Това ще ти покаже в конзолата (F12) дали работи
-            sidebar.classList.toggle('open'); // Използваме toggle за по-лесно отваряне/затваряне
-        });
-    }
-
-    if (closeSidebarBtn) {
-        closeSidebarBtn.addEventListener('click', function () {
-            sidebar.classList.remove('open');
-        });
-    }
-});
-
-
 // ==========================================
-// AI ЧАТ БОТ
+// 1. ГЛОБАЛНИ ПРОМЕНЛИВИ (СЪСТОЯНИЕ)
 // ==========================================
+let allChats = JSON.parse(localStorage.getItem('scriptsensei_chats')) || []; // Зареждаме историята
+let currentChatId = null; // ID на текущия разговор
 
-const sendBtn = document.getElementById('send-btn');
-const userInput = document.getElementById('user-input');
 const chatHistory = document.getElementById('chat-history');
+const userInput = document.getElementById('user-input');
+const sendBtn = document.getElementById('send-btn');
+const sidebar = document.getElementById('sidebar');
+const menuBtn = document.getElementById('menu-btn');
+const closeSidebarBtn = document.getElementById('close-sidebar');
+const newChatBtn = document.getElementById('new-chat-btn');
+const chatList = document.querySelector('.chat-list');
 
-// ВНИМАНИЕ: Тук сложихме твоя линк от снимката!
+// Линкът към твоя сървър (Groq)
 const API_URL = 'http://127.0.0.1:5001/scriptsensei-4e8fe/us-central1/chat';
 
-function addMessage(text, sender) {
+// ==========================================
+// 2. УПРАВЛЕНИЕ НА ИСТОРИЯТА (SIDEBAR)
+// ==========================================
+
+// Функция за създаване на нов чат
+function startNewChat() {
+    currentChatId = Date.now(); // Уникално ID (часа в милисекунди)
+    chatHistory.innerHTML = ''; // Чистим екрана
+
+    // Добавяме приветствие
+    addMessageToUI("Здравей! Аз съм твоят ментор. Какво искаш да научим днес?", 'bot');
+
+    // Махаме 'active' от всички в менюто
+    document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
+}
+
+// Функция за запазване на съобщение в паметта
+function saveMessage(text, sender) {
+    // 1. Намираме текущия чат в масива
+    let chat = allChats.find(c => c.id === currentChatId);
+
+    // 2. Ако няма такъв (това е първо съобщение), го създаваме
+    if (!chat) {
+        chat = {
+            id: currentChatId,
+            title: text, // Първото съобщение става заглавие
+            messages: []
+        };
+        allChats.unshift(chat); // Слагаме го най-отпред
+        renderSidebar(); // Обновяваме менюто веднага
+    }
+
+    // 3. Добавяме съобщението
+    chat.messages.push({ text, sender });
+
+    // 4. Запазваме в браузъра (LocalStorage)
+    localStorage.setItem('scriptsensei_chats', JSON.stringify(allChats));
+}
+
+// Функция за показване на менюто (Рендериране)
+function renderSidebar() {
+    chatList.innerHTML = ''; // Чистим списъка
+
+    allChats.forEach(chat => {
+        const div = document.createElement('div');
+        div.classList.add('chat-item');
+        if (chat.id === currentChatId) div.classList.add('active');
+        div.innerText = chat.title;
+
+        // При клик - зареждаме този чат
+        div.onclick = () => loadChat(chat.id);
+
+        // Бутонче за триене (по желание, за красота)
+        // Може да добавим по-късно
+
+        chatList.appendChild(div);
+    });
+}
+
+// Функция за зареждане на стар чат
+function loadChat(id) {
+    currentChatId = id;
+    chatHistory.innerHTML = ''; // Чистим текущия екран
+
+    const chat = allChats.find(c => c.id === id);
+    if (chat) {
+        // Показваме всички съобщения от паметта
+        // Винаги слагаме приветствието първо (ако го няма в базата)
+        addMessageToUI("Здравей! Аз съм твоят ментор. Какво искаш да научим днес?", 'bot');
+
+        chat.messages.forEach(msg => {
+            addMessageToUI(msg.text, msg.sender);
+        });
+    }
+
+    renderSidebar(); // Обновяваме кое е 'active'
+    // Затваряме менюто на мобилни (по желание)
+    if (window.innerWidth < 800) sidebar.classList.remove('open');
+}
+
+// ==========================================
+// 3. ВИЗУАЛИЗАЦИЯ (UI)
+// ==========================================
+
+// Тази функция САМО рисува по екрана (не запазва)
+function addMessageToUI(text, sender) {
     const rowDiv = document.createElement('div');
     rowDiv.classList.add('message-row');
 
     if (sender === 'user') {
         rowDiv.classList.add('user-row');
-
-        // Потребителят има само балонче
         const bubble = document.createElement('div');
         bubble.classList.add('user-bubble');
         bubble.innerText = text;
         rowDiv.appendChild(bubble);
-
     } else {
         rowDiv.classList.add('bot-row');
 
@@ -56,11 +121,13 @@ function addMessage(text, sender) {
         const textDiv = document.createElement('div');
         textDiv.classList.add('bot-text');
 
-        // ТУК Е ПРОМЯНАТА: Директно и чисто
-        // marked.parse превръща **текст** в <strong>текст</strong>
-        textDiv.innerHTML = marked.parse(text);
+        // Markdown + Code Logic
+        if (typeof marked !== 'undefined') {
+            textDiv.innerHTML = marked.parse(text);
+        } else {
+            textDiv.innerText = text;
+        }
 
-        // Логика за бутона "Сложи в редактора"
         if (text.includes('```')) {
             const codeMatch = text.match(/```(?:javascript|js)?\s*([\s\S]*?)```/i);
             if (codeMatch && codeMatch[1]) {
@@ -68,11 +135,10 @@ function addMessage(text, sender) {
                 const runCodeBtn = document.createElement('button');
                 runCodeBtn.innerText = "⚡ Сложи в редактора";
                 runCodeBtn.className = "code-btn";
-
                 runCodeBtn.onclick = function () {
                     document.getElementById('code-editor').value = cleanCode;
                 };
-                textDiv.appendChild(runCodeBtn); // Слагаме бутона директно
+                textDiv.appendChild(runCodeBtn);
             }
         }
 
@@ -84,76 +150,113 @@ function addMessage(text, sender) {
     chatHistory.scrollTop = chatHistory.scrollHeight;
 }
 
+// ==========================================
+// 4. LISTENERS (БУТОНИТЕ)
+// ==========================================
+
+// Изпращане на съобщение
 sendBtn.addEventListener('click', async function () {
     const text = userInput.value;
     if (text.trim() === "") return;
 
-    // 1. Показваме въпроса веднага
-    addMessage(text, 'user');
+    // 1. Показваме и запазваме твоето съобщение веднага
+    addMessageToUI(text, 'user');
+    saveMessage(text, 'user');
     userInput.value = '';
 
-    // 2. Пращаме го към AI сървъра
+    // --- ПОДГОТОВКА НА ПАМЕТТА (НОВО) ---
+    // Намираме текущия чат
+    const currentChat = allChats.find(c => c.id === currentChatId);
+    let messagesPayload = [];
+
+    if (currentChat) {
+        // Взимаме последните 10 съобщения (за да не стане прекалено тежко)
+        // и ги превръщаме във формат, който AI разбира (role: 'user' или 'assistant')
+        const recentMessages = currentChat.messages.slice(-10);
+
+        messagesPayload = recentMessages.map(msg => ({
+            role: msg.sender === 'user' ? 'user' : 'assistant',
+            content: msg.text
+        }));
+    } else {
+        // Ако е чисто нов чат и още не е запазен в allChats,
+        // просто слагаме текущото съобщение
+        messagesPayload.push({ role: 'user', content: text });
+    }
+    // ------------------------------------
+
+    // 2. Пращаме всичко към AI
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: text })
+            // Пращаме целия масив "messages", а не само "message"
+            body: JSON.stringify({ messages: messagesPayload })
         });
 
         const data = await response.json();
 
-        // Проверка: Ако има отговор, го покажи. Ако има грешка - покажи нея.
         if (data.reply) {
-            addMessage(data.reply, 'bot');
+            addMessageToUI(data.reply, 'bot');
+            saveMessage(data.reply, 'bot');
         } else if (data.error) {
-            addMessage("🚨 " + data.error, 'bot');
-        } else {
-            addMessage("Нещо странно се случи (undefined).", 'bot');
+            addMessageToUI("🚨 " + data.error, 'bot');
         }
 
     } catch (error) {
-        addMessage("Грешка: Сървърът не отговаря.", 'bot');
+        addMessageToUI("Грешка: Сървърът не отговаря.", 'bot');
+        console.error(error);
     }
 });
 
+// Бутон за отваряне на менюто
+if (menuBtn) {
+    menuBtn.addEventListener('click', function () {
+        sidebar.classList.toggle('open');
+    });
+}
 
-// ==========================================
-// КОД ЕДИТОР И КОНЗОЛА
-// ==========================================
+// Бутон за затваряне (Х)
+if (closeSidebarBtn) {
+    closeSidebarBtn.addEventListener('click', function () {
+        sidebar.classList.remove('open');
+    });
+}
 
-const codeEditor = document.getElementById('code-editor');
+// Бутон "Нов чат"
+if (newChatBtn) {
+    newChatBtn.addEventListener('click', function () {
+        startNewChat();
+        sidebar.classList.remove('open'); // Затваряме менюто, за да почнем да пишем
+    });
+}
+
+// Logic за десния панел (Code Runner)
 const runBtn = document.getElementById('run-btn');
 const outputBox = document.getElementById('console-output');
+const codeEditor = document.getElementById('code-editor');
 
-runBtn.addEventListener('click', function () {
-    // 1. Взимаме кода, който си написал
-    const userCode = codeEditor.value;
+if (runBtn) {
+    runBtn.addEventListener('click', function () {
+        const userCode = codeEditor.value;
+        outputBox.innerHTML = '<div class="console-label">Console Output:</div>';
 
-    // 2. Изчистваме старото съдържание на конзолата
-    outputBox.innerHTML = '';
+        try {
+            const originalConsoleLog = console.log;
+            console.log = function (message) {
+                outputBox.innerHTML += `<div>> ${message}</div>`;
+                originalConsoleLog(message);
+            };
+            new Function(userCode)();
+            console.log = originalConsoleLog;
+        } catch (error) {
+            outputBox.innerHTML += `<div style="color: #ff4444;">🚨 ${error.message}</div>`;
+        }
+    });
+}
 
-    try {
-        // --- МАГИЯ: Пренасочване на console.log ---
-        // Запазваме оригиналната конзола (за да не счупим браузъра)
-        const originalConsoleLog = console.log;
-
-        // Казваме на JS: "Когато някой напише console.log, не го печатай в скритата конзола, а го покажи в нашата кутия!"
-        console.log = function (message) {
-            // Добавяме съобщението в сивата кутия
-            outputBox.innerHTML += `<div>> ${message}</div>`;
-            // И все пак го пускаме и в скритата конзола (за всеки случай)
-            originalConsoleLog(message);
-        };
-
-        // 3. Изпълняваме кода на потребителя!
-        // "new Function" създава истинска функция от текст и я пуска
-        new Function(userCode)();
-
-        // Връщаме нормалната конзола, след като приключим
-        console.log = originalConsoleLog;
-
-    } catch (error) {
-        // Ако има грешка в кода, я показваме в червено
-        outputBox.innerHTML = `<div style="color: #ff4444;">🚨 Грешка: ${error.message}</div>`;
-    }
-});
+// ==========================================
+// 5. STARTUP (ПРИ ЗАРЕЖДАНЕ)
+// ==========================================
+renderSidebar(); // Рисуваме менюто
+startNewChat();  // Започваме нов празен чат
