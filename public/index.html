@@ -10,33 +10,53 @@
 </head>
 
 <body>
+    <div class="chat-panel">
 
-    <div class="container">
-        <section class="chat-section">
-            <header>
-                <h1>ScriptSensei 🤖</h1>
-                <p>Попитай ме нещо за JavaScript!</p>
-            </header>
+        <div class="top-bar">
+            <span class="brand-name">ScriptSensei 🤖</span>
+        </div>
 
-            <div id="chat-history" class="chat-history">
-                <div class="message bot-message">
-                    Здравей! Аз съм твоят ментор. Какво искаш да научим днес?
+        <div id="chat-history">
+            <div class="message-row bot-row">
+                <img src="https://robohash.org/scriptsensei?set=set1&bgset=bg1&size=100x100" class="avatar">
+                <div class="message-content bot-text">
+                    Здравей! Аз съм твоят JavaScript ментор. Готов ли си да пишем код?
                 </div>
             </div>
+        </div>
 
-            <div class="input-area">
-                <input type="text" id="user-input" placeholder="Напиши въпрос или код тук..." autocomplete="off">
-                <button id="send-btn">Изпрати</button>
+        <div class="input-wrapper">
+            <div class="input-container">
+                <input type="text" id="user-input" placeholder="Питай ме нещо за кода..." autocomplete="off">
+                <button id="send-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="19" x2="12" y2="5"></line>
+                        <polyline points="5 12 12 5 19 12"></polyline>
+                    </svg>
+                </button>
             </div>
-        </section>
-
-        <section class="editor-section">
-            <h2>Твоят код</h2>
-            <textarea id="code-editor" placeholder="// Пиши JS код тук..."></textarea>
-            <button id="run-btn" class="run-btn">Изпълни кода (Тест)</button>
-            <div id="console-output" class="output-box">Резултатът ще се покаже тук...</div>
-        </section>
+            <div class="disclaimer">ScriptSensei може да греши. Проверявай кода.</div>
+        </div>
     </div>
+
+    <div class="code-panel">
+        <div class="editor-header">
+            <span>JavaScript Editor</span>
+            <span class="status-dot"></span>
+        </div>
+
+        <textarea id="code-editor" spellcheck="false">// Твоят код ще се появи тук...</textarea>
+
+        <div class="controls">
+            <button id="run-btn" class="run-btn">▶ Изпълни кода</button>
+        </div>
+
+        <div id="console-output" class="console">
+            <div class="console-label">Console Output:</div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
 
     <script src="script.js"></script>
 </body>

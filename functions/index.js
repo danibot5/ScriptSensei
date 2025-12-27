@@ -4,23 +4,23 @@ require("dotenv").config();
 
 const SYSTEM_PROMPT = "Ти си ScriptSensei - приятелски настроен учител по JavaScript. Твоята цел е да помагаш на начинаещи. Обяснявай кратко и давай примери на български език.";
 
-exports.chat = onRequest({ cors: true }, async function(req, res) {
+exports.chat = onRequest({ cors: true }, async function (req, res) {
   try {
     if (!process.env.OPENAI_API_KEY) {
-       throw new Error("Липсва API ключ в .env файла!");
+      throw new Error("Липсва API ключ в .env файла!");
     }
 
     // ТУК Е МАГИЯТА: Насочваме го към безплатния сървър на Groq
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
-      baseURL: "https://api.groq.com/openai/v1" 
+      baseURL: "https://api.groq.com/openai/v1"
     });
 
     const userMessage = req.body.message;
 
     const completion = await openai.chat.completions.create({
       // Използваме модел "llama-3.3-70b", който е много умен и безплатен
-      model: "llama-3.3-70b-versatile", 
+      model: "llama-3.3-70b-versatile",
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: userMessage },

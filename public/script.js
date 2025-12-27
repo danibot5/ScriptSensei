@@ -10,56 +10,53 @@ const chatHistory = document.getElementById('chat-history');
 const API_URL = 'http://127.0.0.1:5001/scriptsensei-4e8fe/us-central1/chat';
 
 function addMessage(text, sender) {
-    const messageDiv = document.createElement('div');
-    messageDiv.classList.add('message');
+    const rowDiv = document.createElement('div');
+    rowDiv.classList.add('message-row');
 
     if (sender === 'user') {
-        messageDiv.classList.add('user-message');
+        rowDiv.classList.add('user-row');
+
+        // Потребителят има само балонче
+        const bubble = document.createElement('div');
+        bubble.classList.add('user-bubble');
+        bubble.innerText = text;
+        rowDiv.appendChild(bubble);
+
     } else {
-        messageDiv.classList.add('bot-message');
-    }
+        rowDiv.classList.add('bot-row');
 
-    // 1. Слагаме текста на съобщението
-    messageDiv.innerText = text;
-    chatHistory.appendChild(messageDiv);
+        const avatarImg = document.createElement('img');
+        avatarImg.src = 'https://robohash.org/scriptsensei?set=set1&bgset=bg1&size=100x100';
+        avatarImg.classList.add('avatar');
 
-    // ============================================================
-    // НОВО: Ако съобщението е от бота и съдържа код...
-    // ============================================================
-    if (sender === 'bot' && text.includes('```')) {
+        const textDiv = document.createElement('div');
+        textDiv.classList.add('bot-text');
 
-        // Търсим кода между тройните кавички (Regex магия)
-        const codeMatch = text.match(/```(?:javascript|js)?\s*([\s\S]*?)```/i);
+        // ТУК Е ПРОМЯНАТА: Директно и чисто
+        // marked.parse превръща **текст** в <strong>текст</strong>
+        textDiv.innerHTML = marked.parse(text);
 
-        if (codeMatch && codeMatch[1]) {
-            const cleanCode = codeMatch[1].trim(); // Това е чистият код
+        // Логика за бутона "Сложи в редактора"
+        if (text.includes('```')) {
+            const codeMatch = text.match(/```(?:javascript|js)?\s*([\s\S]*?)```/i);
+            if (codeMatch && codeMatch[1]) {
+                const cleanCode = codeMatch[1].trim();
+                const runCodeBtn = document.createElement('button');
+                runCodeBtn.innerText = "⚡ Сложи в редактора";
+                runCodeBtn.className = "code-btn";
 
-            // Създаваме бутон "Сложи в редактора"
-            const runCodeBtn = document.createElement('button');
-            runCodeBtn.innerText = "🔽 Сложи кода в редактора";
-            runCodeBtn.style.marginTop = "10px";
-            runCodeBtn.style.padding = "5px 10px";
-            runCodeBtn.style.backgroundColor = "#ffca28"; // Жълт цвят
-            runCodeBtn.style.border = "none";
-            runCodeBtn.style.cursor = "pointer";
-            runCodeBtn.style.borderRadius = "5px";
-            runCodeBtn.style.fontWeight = "bold";
-
-            // Какво става като го натиснеш?
-            runCodeBtn.onclick = function () {
-                const codeEditor = document.getElementById('code-editor');
-                codeEditor.value = cleanCode; // ПРАЩАМЕ ГО ВДЯСНО!
-
-                // Ефект за потвърждение
-                runCodeBtn.innerText = "✅ Готово!";
-                setTimeout(() => runCodeBtn.innerText = "🔽 Сложи пак", 2000);
-            };
-
-            messageDiv.appendChild(runCodeBtn);
+                runCodeBtn.onclick = function () {
+                    document.getElementById('code-editor').value = cleanCode;
+                };
+                textDiv.appendChild(runCodeBtn); // Слагаме бутона директно
+            }
         }
-    }
-    // ============================================================
 
+        rowDiv.appendChild(avatarImg);
+        rowDiv.appendChild(textDiv);
+    }
+
+    chatHistory.appendChild(rowDiv);
     chatHistory.scrollTop = chatHistory.scrollHeight;
 }
 
