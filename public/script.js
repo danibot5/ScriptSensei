@@ -299,6 +299,12 @@ if (runBtn) {
     });
 }
 
+userInput.addEventListener('keypress', function(event) {
+    if (event.key === 'Enter') {
+        sendBtn.click();
+    }
+});
+
 // ==========================================
 // 5. STARTUP (ПРИ ЗАРЕЖДАНЕ)
 // ==========================================
