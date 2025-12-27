@@ -1,3 +1,27 @@
+// ==============================
+// СТРАНИЧНО МЕНЮ
+// ==============================
+
+document.addEventListener('DOMContentLoaded', function () {
+    const sidebar = document.getElementById('sidebar');
+    const menuBtn = document.getElementById('menu-btn'); // Трябва да съвпада с HTML id="menu-btn"
+    const closeSidebarBtn = document.getElementById('close-sidebar');
+
+    if (menuBtn) {
+        menuBtn.addEventListener('click', function () {
+            console.log("Бутонът е натиснат!"); // Това ще ти покаже в конзолата (F12) дали работи
+            sidebar.classList.toggle('open'); // Използваме toggle за по-лесно отваряне/затваряне
+        });
+    }
+
+    if (closeSidebarBtn) {
+        closeSidebarBtn.addEventListener('click', function () {
+            sidebar.classList.remove('open');
+        });
+    }
+});
+
+
 // ==========================================
 // AI ЧАТ БОТ
 // ==========================================
