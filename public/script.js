@@ -59,17 +59,38 @@ function saveMessage(text, sender) {
 function renderSidebar() {
     chatList.innerHTML = ''; // Чистим списъка
 
-    allChats.forEach(chat => {
+    // Сортираме: Най-новите чатове най-отгоре
+    // (Ако искаш хронологичен ред, ползвай .sort)
+    const sortedChats = allChats.slice().reverse();
+
+    sortedChats.forEach(chat => {
         const div = document.createElement('div');
         div.classList.add('chat-item');
         if (chat.id === currentChatId) div.classList.add('active');
-        div.innerText = chat.title;
 
-        // При клик - зареждаме този чат
+        // При клик на реда -> зареждаме чата
         div.onclick = () => loadChat(chat.id);
 
-        // Бутонче за триене (по желание, за красота)
-        // Може да добавим по-късно
+        // 1. Заглавието
+        const titleSpan = document.createElement('span');
+        titleSpan.classList.add('chat-title');
+        titleSpan.innerText = chat.title || "Нов разговор";
+
+        // 2. Кошчето (SVG икона)
+        const delBtn = document.createElement('button');
+        delBtn.classList.add('delete-btn');
+        delBtn.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+        `;
+
+        // При клик на кошчето -> трием
+        delBtn.onclick = (e) => deleteChat(chat.id, e);
+
+        div.appendChild(titleSpan);
+        div.appendChild(delBtn);
 
         chatList.appendChild(div);
     });
@@ -94,6 +115,29 @@ function loadChat(id) {
     renderSidebar(); // Обновяваме кое е 'active'
     // Затваряме менюто на мобилни (по желание)
     if (window.innerWidth < 800) sidebar.classList.remove('open');
+}
+
+// Функция за изтриване на чат
+function deleteChat(id, event) {
+    // ВАЖНО: Спираме клика да не "пробие" към бутона за отваряне
+    event.stopPropagation();
+
+    // Питаме потребителя за всеки случай
+    if (!confirm("Сигурен ли си, че искаш да изтриеш този чат?")) return;
+
+    // 1. Филтрираме масива (махаме този чат)
+    allChats = allChats.filter(c => c.id !== id);
+
+    // 2. Запазваме новия списък
+    localStorage.setItem('scriptsensei_chats', JSON.stringify(allChats));
+
+    // 3. Ако сме изтрили текущия отворен чат -> започваме нов
+    if (id === currentChatId) {
+        startNewChat();
+    } else {
+        // Ако сме изтрили друг, просто обновяваме менюто
+        renderSidebar();
+    }
 }
 
 // ==========================================
