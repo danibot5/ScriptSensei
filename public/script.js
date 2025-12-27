@@ -225,6 +225,12 @@ function removeLoading() {
     }
 }
 
+function scrollToBottom() {
+    setTimeout(() => {
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    }, 50);
+}
+
 // ==========================================
 // 4. LISTENERS (БУТОНИТЕ)
 // ==========================================

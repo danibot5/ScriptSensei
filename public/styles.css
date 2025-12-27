@@ -38,12 +38,11 @@ body {
 #chat-history {
     flex: 1;
     overflow-y: auto;
-    padding: 20px 30px 100px 30px;
-    /* Голям padding долу заради input-а */
+    padding: 20px 30px 150px 30px;
     display: flex;
     flex-direction: column;
     gap: 25px;
-    /* Разстояние между съобщенията */
+    scroll-behavior: smooth;
 }
 
 /* --- СЪОБЩЕНИЯ (СТИЛ GEMINI/GPT) --- */
