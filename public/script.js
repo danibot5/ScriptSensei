@@ -194,6 +194,37 @@ function addMessageToUI(text, sender) {
     chatHistory.scrollTop = chatHistory.scrollHeight;
 }
 
+function showLoading() {
+    const rowDiv = document.createElement('div');
+    rowDiv.classList.add('message-row', 'bot-row');
+    rowDiv.id = 'loading-indicator'; // Слагаме ID, за да го намерим и изтрием после
+
+    const avatarImg = document.createElement('img');
+    avatarImg.src = 'https://robohash.org/scriptsensei?set=set1&bgset=bg1&size=100x100';
+    avatarImg.classList.add('avatar');
+
+    const bubble = document.createElement('div');
+    // Няма стил 'bot-text', за да не се форматира, а слагаме точките
+    bubble.innerHTML = `
+        <div class="typing-indicator">
+            <span></span><span></span><span></span>
+        </div>
+    `;
+
+    rowDiv.appendChild(avatarImg);
+    rowDiv.appendChild(bubble);
+    chatHistory.appendChild(rowDiv);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+}
+
+// Скрива индикатора
+function removeLoading() {
+    const loader = document.getElementById('loading-indicator');
+    if (loader) {
+        loader.remove();
+    }
+}
+
 // ==========================================
 // 4. LISTENERS (БУТОНИТЕ)
 // ==========================================
@@ -203,42 +234,39 @@ sendBtn.addEventListener('click', async function () {
     const text = userInput.value;
     if (text.trim() === "") return;
 
-    // 1. Показваме и запазваме твоето съобщение веднага
+    // 1. Показваме твоето съобщение
     addMessageToUI(text, 'user');
     saveMessage(text, 'user');
     userInput.value = '';
 
-    // --- ПОДГОТОВКА НА ПАМЕТТА (НОВО) ---
-    // Намираме текущия чат
+    // --- ПОДГОТОВКА НА ИСТОРИЯТА ---
     const currentChat = allChats.find(c => c.id === currentChatId);
     let messagesPayload = [];
 
     if (currentChat) {
-        // Взимаме последните 10 съобщения (за да не стане прекалено тежко)
-        // и ги превръщаме във формат, който AI разбира (role: 'user' или 'assistant')
         const recentMessages = currentChat.messages.slice(-10);
-
         messagesPayload = recentMessages.map(msg => ({
             role: msg.sender === 'user' ? 'user' : 'assistant',
             content: msg.text
         }));
     } else {
-        // Ако е чисто нов чат и още не е запазен в allChats,
-        // просто слагаме текущото съобщение
         messagesPayload.push({ role: 'user', content: text });
     }
-    // ------------------------------------
 
-    // 2. Пращаме всичко към AI
+    // 2. ПОКАЗВАМЕ ЧЕ МИСЛИМ (НОВО!)
+    showLoading();
+
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            // Пращаме целия масив "messages", а не само "message"
             body: JSON.stringify({ messages: messagesPayload })
         });
 
         const data = await response.json();
+
+        // 3. МАХАМЕ ТОЧКИТЕ ВЕДНАГА ЩОМ ДОЙДЕ ОТГОВОРЪТ (НОВО!)
+        removeLoading();
 
         if (data.reply) {
             addMessageToUI(data.reply, 'bot');
@@ -248,6 +276,7 @@ sendBtn.addEventListener('click', async function () {
         }
 
     } catch (error) {
+        removeLoading(); // Махаме точките дори при грешка
         addMessageToUI("Грешка: Сървърът не отговаря.", 'bot');
         console.error(error);
     }
@@ -299,7 +328,7 @@ if (runBtn) {
     });
 }
 
-userInput.addEventListener('keypress', function(event) {
+userInput.addEventListener('keypress', function (event) {
     if (event.key === 'Enter') {
         sendBtn.click();
     }
